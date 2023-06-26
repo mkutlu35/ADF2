@@ -1,0 +1,92 @@
+{
+	"name": "3-Stored Procedure1",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Metadata Last Modified Date",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "az_ADSL2_InputEmptq",
+						"type": "DatasetReference"
+					},
+					"fieldList": [
+						"lastModified",
+						"size",
+						"itemName"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "usp_InsertLastModified",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata Last Modified Date",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[usp_InsertLastModifiedDate]",
+					"storedProcedureParameters": {
+						"FileName": {
+							"value": {
+								"value": "@activity('Get Metadata Last Modified Date').output.itemName",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ModifiedDate": {
+							"value": {
+								"value": "@activity('Get Metadata Last Modified Date').output.lastModified",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"RecordInsertDate": {
+							"value": {
+								"value": "@convertFromUtc(utcnow(),'Eastern Standard Time')",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "az_SQLDB_ADF_Dynamics365FO_Server",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2023-06-18T20:32:53Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

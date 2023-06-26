@@ -1,0 +1,9 @@
+{
+	"name": "ADFdynamics365",
+	"location": "westeurope",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "45a39b9e-2a6f-4168-b1cf-4c96ad2ca294",
+		"tenantId": "e0a994ce-47f0-4845-b93a-402cde888f93"
+	}
+}

@@ -1,0 +1,25 @@
+{
+	"name": "DestinationDataset_b55",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "az_ADLS2_ADFdynamics365",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "Emp.csv",
+				"folderPath": "Destination1",
+				"fileSystem": "dynamics365fopre1"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
