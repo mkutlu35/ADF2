@@ -1,0 +1,307 @@
+{
+    "name": "SQLDatabaseSchema",
+    "properties": {
+        "activities": [
+            {
+                "name": "SQLSchemaFiles",
+                "type": "GetMetadata",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "7.00:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "dataset": {
+                        "referenceName": "SQLScriptDataSet",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "Container": {
+                                "value": "@pipeline().parameters.Container",
+                                "type": "Expression"
+                            },
+                            "Folder": {
+                                "value": "@concat(pipeline().parameters.Environment,'/',pipeline().parameters.SQLFolder,'/')",
+                                "type": "Expression"
+                            }
+                        }
+                    },
+                    "fieldList": [
+                        "childItems",
+                        "itemName",
+                        "lastModified"
+                    ],
+                    "storeSettings": {
+                        "type": "AzureBlobFSReadSettings",
+                        "recursive": true,
+                        "modifiedDatetimeStart": {
+                            "value": "@addDays(utcNow(),-1)",
+                            "type": "Expression"
+                        },
+                        "modifiedDatetimeEnd": {
+                            "value": "@utcNow()",
+                            "type": "Expression"
+                        },
+                        "enablePartitionDiscovery": false
+                    },
+                    "formatSettings": {
+                        "type": "DelimitedTextReadSettings"
+                    }
+                }
+            },
+            {
+                "name": "SQLDatabaseSchemaFilesLoop",
+                "type": "ForEach",
+                "dependsOn": [
+                    {
+                        "activity": "SQLSchemaFiles",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "userProperties": [],
+                "typeProperties": {
+                    "items": {
+                        "value": "@activity('SQLSchemaFiles').output.childItems",
+                        "type": "Expression"
+                    },
+                    "isSequential": true,
+                    "activities": [
+                        {
+                            "name": "SQLCommand",
+                            "type": "SetVariable",
+                            "dependsOn": [
+                                {
+                                    "activity": "WebCallScript",
+                                    "dependencyConditions": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            ],
+                            "userProperties": [],
+                            "typeProperties": {
+                                "variableName": "SQLCommand",
+                                "value": {
+                                    "value": "@activity('WebCallScript').output.Response\n",
+                                    "type": "Expression"
+                                }
+                            }
+                        },
+                        {
+                            "name": "WebCallScript",
+                            "type": "WebActivity",
+                            "dependsOn": [],
+                            "policy": {
+                                "timeout": "7.00:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "userProperties": [],
+                            "typeProperties": {
+                                "url": {
+                                    "value": "@concat('https://',pipeline().parameters.StorageName,'.blob.core.windows.net/',pipeline().parameters.Container,'/',pipeline().parameters.Environment,'/',pipeline().parameters.SQLFolder,'/',item().name)\n",
+                                    "type": "Expression"
+                                },
+                                "method": "GET",
+                                "headers": {
+                                    "x-ms-version": "2017-11-09",
+                                    "x-ms-blob-type": "BlockBlob"
+                                },
+                                "disableCertValidation": false,
+                                "authentication": {
+                                    "type": "MSI",
+                                    "resource": "https://storage.azure.com"
+                                }
+                            }
+                        },
+                        {
+                            "name": "Script",
+                            "type": "Script",
+                            "dependsOn": [
+                                {
+                                    "activity": "SQLCommand",
+                                    "dependencyConditions": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            ],
+                            "policy": {
+                                "timeout": "7.00:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "userProperties": [],
+                            "linkedServiceName": {
+                                "referenceName": "VM05SQLLinkedService",
+                                "type": "LinkedServiceReference"
+                            },
+                            "typeProperties": {
+                                "scripts": [
+                                    {
+                                        "type": "NonQuery",
+                                        "text": {
+                                            "value": "@variables('SQLCommand')",
+                                            "type": "Expression"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "EntitiesDictionary",
+                "type": "SqlServerStoredProcedure",
+                "dependsOn": [
+                    {
+                        "activity": "SQLDatabaseSchemaFilesLoop",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "7.00:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "storedProcedureName": "[DL].[SP_AzureDataFactoryExecution]"
+                },
+                "linkedServiceName": {
+                    "referenceName": "VM05SQLLinkedService",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "CopyManifestParametersInformation",
+                "type": "Copy",
+                "dependsOn": [
+                    {
+                        "activity": "EntitiesDictionary",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "7.00:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "DelimitedTextSource",
+                        "storeSettings": {
+                            "type": "AzureBlobFSReadSettings",
+                            "recursive": true,
+                            "modifiedDatetimeStart": {
+                                "value": "@addDays(utcNow(),-5)",
+                                "type": "Expression"
+                            },
+                            "modifiedDatetimeEnd": {
+                                "value": "@utcNow()",
+                                "type": "Expression"
+                            },
+                            "enablePartitionDiscovery": false
+                        },
+                        "formatSettings": {
+                            "type": "DelimitedTextReadSettings"
+                        }
+                    },
+                    "sink": {
+                        "type": "SqlServerSink",
+                        "writeBehavior": "upsert",
+                        "upsertSettings": {
+                            "useTempDB": true,
+                            "keys": [
+                                "TableName"
+                            ]
+                        },
+                        "sqlWriterUseTableLock": false
+                    },
+                    "enableStaging": false,
+                    "translator": {
+                        "type": "TabularTranslator",
+                        "typeConversion": true,
+                        "typeConversionSettings": {
+                            "allowDataTruncation": true,
+                            "treatBooleanAsNumber": false
+                        }
+                    }
+                },
+                "inputs": [
+                    {
+                        "referenceName": "CopyManifestDataEntitiesMapping",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "Container": {
+                                "value": "@pipeline().parameters.Container",
+                                "type": "Expression"
+                            },
+                            "EntityMapping": {
+                                "value": "@pipeline().parameters.EntityMapping",
+                                "type": "Expression"
+                            },
+                            "Environment": {
+                                "value": "@pipeline().parameters.Environment",
+                                "type": "Expression"
+                            }
+                        }
+                    }
+                ],
+                "outputs": [
+                    {
+                        "referenceName": "IncrementalDataSet",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "Schema": "DL",
+                            "Table": "DataFeedEntityMapping"
+                        }
+                    }
+                ]
+            }
+        ],
+        "parameters": {
+            "Container": {
+                "type": "string"
+            },
+            "SQLFolder": {
+                "type": "string"
+            },
+            "Environment": {
+                "type": "string"
+            },
+            "StorageName": {
+                "type": "string"
+            },
+            "EntityMapping": {
+                "type": "string"
+            }
+        },
+        "variables": {
+            "FileName": {
+                "type": "String"
+            },
+            "SQLCommand": {
+                "type": "String"
+            }
+        },
+        "annotations": []
+    }
+}

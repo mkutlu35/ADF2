@@ -1,0 +1,213 @@
+{
+    "name": "ProcessExecution",
+    "properties": {
+        "activities": [
+            {
+                "name": "CurrentExecution",
+                "type": "SetVariable",
+                "dependsOn": [],
+                "userProperties": [],
+                "typeProperties": {
+                    "variableName": "CurrentExecution",
+                    "value": {
+                        "value": "@formatDateTime(utcNow(),'yyyy-MM-dd HH:mm:ss')",
+                        "type": "Expression"
+                    }
+                }
+            },
+            {
+                "name": "SequencePipeLine",
+                "type": "ExecutePipeline",
+                "dependsOn": [
+                    {
+                        "activity": "CurrentExecution",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "userProperties": [],
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "SQLSequences",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true,
+                    "parameters": {
+                        "Container": {
+                            "value": "@pipeline().parameters.Container",
+                            "type": "Expression"
+                        },
+                        "SQLFolder": {
+                            "value": "@pipeline().parameters.SQLFolder",
+                            "type": "Expression"
+                        },
+                        "Environment": {
+                            "value": "@pipeline().parameters.Environment",
+                            "type": "Expression"
+                        },
+                        "StorageName": {
+                            "value": "@pipeline().parameters.StorageName",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "SQLSchemaPipeLine",
+                "type": "ExecutePipeline",
+                "dependsOn": [
+                    {
+                        "activity": "SequencePipeLine",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "userProperties": [],
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "SQLDatabaseSchema",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true,
+                    "parameters": {
+                        "Container": {
+                            "value": "@pipeline().parameters.Container",
+                            "type": "Expression"
+                        },
+                        "SQLFolder": {
+                            "value": "@pipeline().parameters.SQLFolder",
+                            "type": "Expression"
+                        },
+                        "Environment": {
+                            "value": "@pipeline().parameters.Environment",
+                            "type": "Expression"
+                        },
+                        "StorageName": {
+                            "value": "@pipeline().parameters.StorageName",
+                            "type": "Expression"
+                        },
+                        "EntityMapping": {
+                            "value": "@pipeline().parameters.EntityMapping",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "IncrementalPipeLine",
+                "type": "ExecutePipeline",
+                "dependsOn": [
+                    {
+                        "activity": "SQLSchemaPipeLine",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "userProperties": [],
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "IncrementalPipeLine",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true,
+                    "parameters": {
+                        "Container": {
+                            "value": "@pipeline().parameters.Container",
+                            "type": "Expression"
+                        },
+                        "ChangeFeedFolder": {
+                            "value": "@pipeline().parameters.ChangeFeedFolder",
+                            "type": "Expression"
+                        },
+                        "Environment": {
+                            "value": "@pipeline().parameters.Environment",
+                            "type": "Expression"
+                        },
+                        "CurrentExceution": {
+                            "value": "@variables('CurrentExecution')",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "FullLoadPipeLine",
+                "type": "ExecutePipeline",
+                "dependsOn": [
+                    {
+                        "activity": "SQLSchemaPipeLine",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "userProperties": [],
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "FullLoadPipeline",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true,
+                    "parameters": {
+                        "Container": {
+                            "value": "@pipeline().parameters.Container",
+                            "type": "Expression"
+                        },
+                        "Environment": {
+                            "value": "@pipeline().parameters.Environment",
+                            "type": "Expression"
+                        },
+                        "CurrentExceution": {
+                            "value": "@variables('CurrentExecution')",
+                            "type": "Expression"
+                        },
+                        "FullLoad": {
+                            "value": "@pipeline().parameters.FullLoad",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            }
+        ],
+        "parameters": {
+            "Container": {
+                "type": "string",
+                "defaultValue": "dynamics365-financeandoperations"
+            },
+            "SQLFolder": {
+                "type": "string",
+                "defaultValue": "SQLScript"
+            },
+            "ChangeFeedFolder": {
+                "type": "string",
+                "defaultValue": "ChangeFeed"
+            },
+            "FullLoad": {
+                "type": "string",
+                "defaultValue": "Tables"
+            },
+            "Environment": {
+                "type": "string",
+                "defaultValue": "ad-bo365r2.sandbox.operations.dynamics.com"
+            },
+            "StorageName": {
+                "type": "string",
+                "defaultValue": "stdatalaked365r2"
+            },
+            "EntityMapping": {
+                "type": "string",
+                "defaultValue": "EntityMapping"
+            }
+        },
+        "variables": {
+            "CurrentExecution": {
+                "type": "String",
+                "defaultValue": "@formatDateTime(utcNow(),'yyyy-mm-dd hh:mm')"
+            }
+        },
+        "annotations": []
+    }
+}

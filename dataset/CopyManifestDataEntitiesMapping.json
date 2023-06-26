@@ -1,0 +1,41 @@
+{
+    "name": "CopyManifestDataEntitiesMapping",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "DataLakeLinkedService",
+            "type": "LinkedServiceReference"
+        },
+        "parameters": {
+            "Container": {
+                "type": "string"
+            },
+            "EntityMapping": {
+                "type": "string"
+            },
+            "Environment": {
+                "type": "string"
+            }
+        },
+        "annotations": [],
+        "type": "DelimitedText",
+        "typeProperties": {
+            "location": {
+                "type": "AzureBlobFSLocation",
+                "fileName": "DataFeedEntityMapping.csv",
+                "folderPath": {
+                    "value": "@concat(dataset().Environment,'/',dataset().EntityMapping)",
+                    "type": "Expression"
+                },
+                "fileSystem": {
+                    "value": "@dataset().Container",
+                    "type": "Expression"
+                }
+            },
+            "columnDelimiter": ",",
+            "escapeChar": "\\",
+            "firstRowAsHeader": true,
+            "quoteChar": "\""
+        },
+        "schema": []
+    }
+}

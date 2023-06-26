@@ -1,0 +1,6 @@
+selected resource name:		ProcessExecution
+selected resource type:		pipeline
+factory name:			DataFactory-INT-POC
+factory location:		westeurope
+subscription id:		fd6394b7-c0d3-416e-b67a-814db1486993
+time of download (UTC):		Mon, 06 Jun 2022 12:34:56 GMT

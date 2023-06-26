@@ -1,0 +1,521 @@
+{
+    "name": "FullLoadPipeline",
+    "properties": {
+        "activities": [
+            {
+                "name": "Execution_One",
+                "type": "Lookup",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "7.00:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "SqlServerSource",
+                        "sqlReaderStoredProcedureName": "[DL].[SP_AzureDataFactoryFulllookup]",
+                        "storedProcedureParameters": {
+                            "type": {
+                                "type": "Int32",
+                                "value": "1"
+                            }
+                        },
+                        "queryTimeout": "02:00:00",
+                        "partitionOption": "None"
+                    },
+                    "dataset": {
+                        "referenceName": "IncrementalDataSet",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "Schema": {
+                                "value": "@variables('Schema')",
+                                "type": "Expression"
+                            },
+                            "Table": {
+                                "value": "@variables('Table')",
+                                "type": "Expression"
+                            }
+                        }
+                    },
+                    "firstRowOnly": false
+                }
+            },
+            {
+                "name": "Execution_Two",
+                "type": "Lookup",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "7.00:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "SqlServerSource",
+                        "sqlReaderStoredProcedureName": "[DL].[SP_AzureDataFactoryFulllookup]",
+                        "storedProcedureParameters": {
+                            "type": {
+                                "type": "Int32",
+                                "value": "2"
+                            }
+                        },
+                        "queryTimeout": "02:00:00",
+                        "partitionOption": "None"
+                    },
+                    "dataset": {
+                        "referenceName": "IncrementalDataSet",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "Schema": {
+                                "value": "@variables('Schema')",
+                                "type": "Expression"
+                            },
+                            "Table": {
+                                "value": "@variables('Table')",
+                                "type": "Expression"
+                            }
+                        }
+                    },
+                    "firstRowOnly": false
+                }
+            },
+            {
+                "name": "Execution_Three",
+                "type": "Lookup",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "7.00:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "SqlServerSource",
+                        "sqlReaderStoredProcedureName": "[DL].[SP_AzureDataFactoryFulllookup]",
+                        "storedProcedureParameters": {
+                            "type": {
+                                "type": "Int32",
+                                "value": "3"
+                            }
+                        },
+                        "queryTimeout": "02:00:00",
+                        "partitionOption": "None"
+                    },
+                    "dataset": {
+                        "referenceName": "IncrementalDataSet",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "Schema": {
+                                "value": "@variables('Schema')",
+                                "type": "Expression"
+                            },
+                            "Table": {
+                                "value": "@variables('Table')",
+                                "type": "Expression"
+                            }
+                        }
+                    },
+                    "firstRowOnly": false
+                }
+            },
+            {
+                "name": "FullLoad_Execution_One_Loop",
+                "type": "ForEach",
+                "dependsOn": [
+                    {
+                        "activity": "Execution_One",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "userProperties": [],
+                "typeProperties": {
+                    "items": {
+                        "value": "@activity('Execution_One').output.value",
+                        "type": "Expression"
+                    },
+                    "isSequential": true,
+                    "activities": [
+                        {
+                            "name": "Execution_One_DataFlow",
+                            "type": "ExecuteDataFlow",
+                            "dependsOn": [],
+                            "policy": {
+                                "timeout": "1.00:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "userProperties": [],
+                            "typeProperties": {
+                                "dataflow": {
+                                    "referenceName": "FullLoadDataFlow",
+                                    "type": "DataFlowReference",
+                                    "parameters": {
+                                        "Root": {
+                                            "value": "'@{item().Root}'",
+                                            "type": "Expression"
+                                        },
+                                        "Container": {
+                                            "value": "'@{item().Container}'",
+                                            "type": "Expression"
+                                        },
+                                        "EntityPath": {
+                                            "value": "'@{item().EntityPath}'",
+                                            "type": "Expression"
+                                        },
+                                        "ManifestName": {
+                                            "value": "'@{item().ManifestName}'",
+                                            "type": "Expression"
+                                        },
+                                        "EntitiyName": {
+                                            "value": "'@{item().EntitiyName}'",
+                                            "type": "Expression"
+                                        },
+                                        "startExecution": {
+                                            "value": "'@{pipeline().parameters.CurrentExceution}'",
+                                            "type": "Expression"
+                                        },
+                                        "endExecution": {
+                                            "value": "'@{item().LastExecution}'",
+                                            "type": "Expression"
+                                        }
+                                    },
+                                    "datasetParameters": {
+                                        "DatabaseDMLOperation": {
+                                            "Schema": "DL",
+                                            "Table": {
+                                                "value": "@item().EntitiyName",
+                                                "type": "Expression"
+                                            }
+                                        }
+                                    }
+                                },
+                                "compute": {
+                                    "coreCount": 8,
+                                    "computeType": "General"
+                                },
+                                "traceLevel": "Fine",
+                                "runConcurrently": true
+                            }
+                        },
+                        {
+                            "name": "FullLoadOne_UpdateLastExecution",
+                            "type": "Script",
+                            "dependsOn": [
+                                {
+                                    "activity": "Execution_One_DataFlow",
+                                    "dependencyConditions": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            ],
+                            "policy": {
+                                "timeout": "7.00:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "userProperties": [],
+                            "linkedServiceName": {
+                                "referenceName": "VM05SQLLinkedService",
+                                "type": "LinkedServiceReference"
+                            },
+                            "typeProperties": {
+                                "scripts": [
+                                    {
+                                        "type": "NonQuery",
+                                        "text": {
+                                            "value": "@concat('Update [DL].[ADF_TablesExecution] set LastExecution = ''',pipeline().parameters.CurrentExceution, '''  Where TableName = ''',item().TableName,'''')\n\n",
+                                            "type": "Expression"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "FullLoad_Execution_Two_Loop",
+                "type": "ForEach",
+                "dependsOn": [
+                    {
+                        "activity": "Execution_Two",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "userProperties": [],
+                "typeProperties": {
+                    "items": {
+                        "value": "@activity('Execution_Two').output.value",
+                        "type": "Expression"
+                    },
+                    "isSequential": true,
+                    "activities": [
+                        {
+                            "name": "Execution_Two_DataFlow",
+                            "type": "ExecuteDataFlow",
+                            "dependsOn": [],
+                            "policy": {
+                                "timeout": "1.00:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "userProperties": [],
+                            "typeProperties": {
+                                "dataflow": {
+                                    "referenceName": "FullLoadDataFlow",
+                                    "type": "DataFlowReference",
+                                    "parameters": {
+                                        "Root": {
+                                            "value": "'@{item().Root}'",
+                                            "type": "Expression"
+                                        },
+                                        "Container": {
+                                            "value": "'@{item().Container}'",
+                                            "type": "Expression"
+                                        },
+                                        "EntityPath": {
+                                            "value": "'@{item().EntityPath}'",
+                                            "type": "Expression"
+                                        },
+                                        "ManifestName": {
+                                            "value": "'@{item().ManifestName}'",
+                                            "type": "Expression"
+                                        },
+                                        "EntitiyName": {
+                                            "value": "'@{item().EntitiyName}'",
+                                            "type": "Expression"
+                                        },
+                                        "startExecution": {
+                                            "value": "'@{pipeline().parameters.CurrentExceution}'",
+                                            "type": "Expression"
+                                        },
+                                        "endExecution": {
+                                            "value": "'@{item().LastExecution}'",
+                                            "type": "Expression"
+                                        }
+                                    },
+                                    "datasetParameters": {
+                                        "DatabaseDMLOperation": {
+                                            "Schema": "DL",
+                                            "Table": {
+                                                "value": "@item().EntitiyName",
+                                                "type": "Expression"
+                                            }
+                                        }
+                                    }
+                                },
+                                "compute": {
+                                    "coreCount": 8,
+                                    "computeType": "General"
+                                },
+                                "traceLevel": "Fine",
+                                "runConcurrently": true
+                            }
+                        },
+                        {
+                            "name": "FullLoadTwo_UpdateLastExecution",
+                            "type": "Script",
+                            "dependsOn": [
+                                {
+                                    "activity": "Execution_Two_DataFlow",
+                                    "dependencyConditions": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            ],
+                            "policy": {
+                                "timeout": "7.00:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "userProperties": [],
+                            "linkedServiceName": {
+                                "referenceName": "VM05SQLLinkedService",
+                                "type": "LinkedServiceReference"
+                            },
+                            "typeProperties": {
+                                "scripts": [
+                                    {
+                                        "type": "NonQuery",
+                                        "text": {
+                                            "value": "@concat('Update [DL].[ADF_TablesExecution] set LastExecution = ''',pipeline().parameters.CurrentExceution, '''  Where TableName = ''',item().TableName,'''')",
+                                            "type": "Expression"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "FullLoad_Execution_Three_Loop",
+                "type": "ForEach",
+                "dependsOn": [
+                    {
+                        "activity": "Execution_Three",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "userProperties": [],
+                "typeProperties": {
+                    "items": {
+                        "value": "@activity('Execution_Three').output.value",
+                        "type": "Expression"
+                    },
+                    "isSequential": true,
+                    "activities": [
+                        {
+                            "name": "Execution_Three_DataFlow",
+                            "type": "ExecuteDataFlow",
+                            "dependsOn": [],
+                            "policy": {
+                                "timeout": "1.00:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "userProperties": [],
+                            "typeProperties": {
+                                "dataflow": {
+                                    "referenceName": "FullLoadDataFlow",
+                                    "type": "DataFlowReference",
+                                    "parameters": {
+                                        "Root": {
+                                            "value": "'@{item().Root}'",
+                                            "type": "Expression"
+                                        },
+                                        "Container": {
+                                            "value": "'@{item().Container}'",
+                                            "type": "Expression"
+                                        },
+                                        "EntityPath": {
+                                            "value": "'@{item().EntityPath}'",
+                                            "type": "Expression"
+                                        },
+                                        "ManifestName": {
+                                            "value": "'@{item().ManifestName}'",
+                                            "type": "Expression"
+                                        },
+                                        "EntitiyName": {
+                                            "value": "'@{item().EntitiyName}'",
+                                            "type": "Expression"
+                                        },
+                                        "startExecution": {
+                                            "value": "'@{pipeline().parameters.CurrentExceution}'",
+                                            "type": "Expression"
+                                        },
+                                        "endExecution": {
+                                            "value": "'@{item().LastExecution}'",
+                                            "type": "Expression"
+                                        }
+                                    },
+                                    "datasetParameters": {
+                                        "DatabaseDMLOperation": {
+                                            "Schema": "DL",
+                                            "Table": {
+                                                "value": "@item().EntitiyName",
+                                                "type": "Expression"
+                                            }
+                                        }
+                                    }
+                                },
+                                "compute": {
+                                    "coreCount": 8,
+                                    "computeType": "General"
+                                },
+                                "traceLevel": "Fine",
+                                "runConcurrently": true
+                            }
+                        },
+                        {
+                            "name": "FullLoadThree_UpdateLastExecution",
+                            "type": "Script",
+                            "dependsOn": [
+                                {
+                                    "activity": "Execution_Three_DataFlow",
+                                    "dependencyConditions": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            ],
+                            "policy": {
+                                "timeout": "7.00:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "userProperties": [],
+                            "linkedServiceName": {
+                                "referenceName": "VM05SQLLinkedService",
+                                "type": "LinkedServiceReference"
+                            },
+                            "typeProperties": {
+                                "scripts": [
+                                    {
+                                        "type": "NonQuery",
+                                        "text": {
+                                            "value": "@concat('Update [DL].[ADF_TablesExecution] set LastExecution = ''',pipeline().parameters.CurrentExceution, '''  Where TableName = ''',item().TableName,'''')",
+                                            "type": "Expression"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "parameters": {
+            "Container": {
+                "type": "string"
+            },
+            "Environment": {
+                "type": "string"
+            },
+            "CurrentExceution": {
+                "type": "string"
+            },
+            "FullLoad": {
+                "type": "string"
+            }
+        },
+        "variables": {
+            "Schema": {
+                "type": "String",
+                "defaultValue": "DL"
+            },
+            "Table": {
+                "type": "String",
+                "defaultValue": "ADF_TablesExecution"
+            }
+        },
+        "annotations": []
+    }
+}

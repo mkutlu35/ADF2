@@ -1,0 +1,12 @@
+{
+    "name": "DataLakeLinkedService",
+    "type": "Microsoft.DataFactory/factories/linkedservices",
+    "properties": {
+        "annotations": [],
+        "type": "AzureBlobFS",
+        "typeProperties": {
+            "url": "https://stdatalaked365.dfs.core.windows.net",
+            "encryptedCredential": "abcd@123456"
+        }
+    }
+}

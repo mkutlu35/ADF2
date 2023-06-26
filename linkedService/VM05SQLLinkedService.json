@@ -1,0 +1,12 @@
+{
+    "name": "VM05SQLLinkedService",
+    "type": "Microsoft.DataFactory/factories/linkedservices",
+    "properties": {
+        "annotations": [],
+        "type": "SqlServer",
+        "typeProperties": {
+            "connectionString": "integrated security=False;data source=dynamics365fodevvm5.axcloud.dynamics.com;initial catalog=ADFDB;user id=ADF",
+            "encryptedCredential": "acd@xyz"
+        }
+    }
+}

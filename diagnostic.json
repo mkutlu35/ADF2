@@ -1,0 +1,22 @@
+{
+    "now": "2022-06-06T12:34:56.206Z",
+    "perfNow": 515914867.4000001,
+    "diagnosticCorrelation": "42dbb907-4800-4759-8cb0-d25c0f9e159a",
+    "source": "DownloadSupportFiles",
+    "environment": {
+        "productName": "adf",
+        "buildVersion": "1.0.052522.9",
+        "environmentType": 3,
+        "resourceName": "DataFactory-INT-POC",
+        "resourceRegion": "westeurope",
+        "resourceGroup": "RG-EUR-WW-INT-D365",
+        "subscriptionId": "fd6394b7-c0d3-416e-b67a-814db1486993",
+        "sessionId": "RTYC",
+        "operationId": "zmw88",
+        "gitType": "GitHub"
+    },
+    "additionalInfo": {
+        "selectedResource": "ProcessExecution",
+        "selectedResourceType": "pipeline"
+    }
+}
