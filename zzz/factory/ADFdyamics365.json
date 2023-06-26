@@ -1,0 +1,9 @@
+{
+	"name": "ADFdyamics365",
+	"location": "westeurope",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "ade78863-c5f6-4d63-98aa-47916ddc82de",
+		"tenantId": "403dfe41-e96c-490c-956f-f476c0b90059"
+	}
+}
